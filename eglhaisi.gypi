@@ -23,6 +23,7 @@
         '../events/events.gyp:events',
         '../events/ozone/events_ozone.gyp:events_ozone_evdev',
         '../gfx/gfx.gyp:gfx',
+        'platform/eglhaisi/ppapi_gstreamer.gyp:ppapi_gstreamer',
       ],
       'sources': [
         'ozone_platform_eglhaisi.cc',

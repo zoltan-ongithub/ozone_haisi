@@ -8,7 +8,8 @@
 #include <EGL/egl.h>
 #include "EGL/fbdev_window.h"
 #include "hifb.h"
-
+#include <sys/ioctl.h>
+#include <fcntl.h>
 
 #define EGLHAISI_WINDOW_WIDTH 1280
 #define EGLHAISI_WINDOW_HEIGTH 720
@@ -71,20 +72,63 @@ class SurfaceOzoneEglhaisi : public SurfaceOzoneEGL {
 
 }  // namespace
 
-SurfaceFactoryEglhaisi::SurfaceFactoryEglhaisi():init_(false)
+SurfaceFactoryEglhaisi::SurfaceFactoryEglhaisi():console_fd_(0)
 {
 }
 SurfaceFactoryEglhaisi::~SurfaceFactoryEglhaisi() 
 { 
 }
 
+void SurfaceFactoryEglhaisi::setColorKey(int color)
+{
+   
+    HI_S32 s32Ret;
+    HIFB_COLORKEY_S struColorKey;    
+    
+    if(color==0)
+    {
+        struColorKey.bKeyEnable  = HI_FALSE;
+        struColorKey.u32Key = 0;
+    }
+    else
+    {
+        struct fb_var_screeninfo vinfo;
+        if ((s32Ret = ioctl(console_fd_, FBIOGET_VSCREENINFO, &vinfo)) < 0)
+        {
+            printf("Unable to FBIOGET_VSCREENINFO!, err=0x%x\n", s32Ret);
+            return;
+        }
+        
+        HI_S32 key = hifb_color2key(&vinfo, color);    
+        struColorKey.bKeyEnable  = HI_TRUE;
+        struColorKey.u32Key = key; 
+    }
+
+    s32Ret = ioctl(console_fd_, FBIOPUT_COLORKEY_HIFB, &struColorKey);
+    if (s32Ret < 0)
+    {
+        printf("set colorkey failed , err=0x%x\n", s32Ret);
+        return;
+    }
+    printf("set colorkey ok\n");
+}
 
 SurfaceFactoryEglhaisi::HardwareState
 SurfaceFactoryEglhaisi::InitializeHardware() {
-  return INITIALIZED;
+    printf("-----SurfaceFactoryEglhaisi::InitializeHardware\n");   
+    console_fd_ = open("/dev/fb0", O_RDWR, 0);
+    //colorkey is red
+    setColorKey(0xFFFF0000);
+    return INITIALIZED;
 }
 
 void SurfaceFactoryEglhaisi::ShutdownHardware() {
+    printf("-----SurfaceFactoryEglhaisi::ShutdownHardware\n");
+    if (console_fd_ > 0)
+    {
+        setColorKey(0);
+        close(console_fd_);
+    }
 }
 
 intptr_t SurfaceFactoryEglhaisi::GetNativeDisplay() {

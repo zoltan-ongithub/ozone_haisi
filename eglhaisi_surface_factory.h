@@ -32,7 +32,8 @@ class SurfaceFactoryEglhaisi : public ui::SurfaceFactoryOzone {
       AddGLLibraryCallback add_gl_library,
       SetGLGetProcAddressProcCallback setprocaddress) OVERRIDE;
  private:
-    bool init_;
+    void setColorKey(int key);
+    int console_fd_;
 };
 
 }  // namespace ui
