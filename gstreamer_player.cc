@@ -156,7 +156,7 @@ bool gstPlayer_play(void *gstData, const char * url)
   /* Add a bus watch, so we get notified when a message arrives */
   data->bus = gst_pipeline_get_bus(GST_PIPELINE(data->playbin));
   gst_bus_add_watch(data->bus, gstPlayer_handle_message, data);
-    
+
   GstStateChangeReturn ret = gst_element_set_state (data->playbin, GST_STATE_READY);
   if (ret == GST_STATE_CHANGE_FAILURE) {
     g_printerr ("Unable to set the pipeline to the ready state.\n");
@@ -168,6 +168,7 @@ bool gstPlayer_play(void *gstData, const char * url)
     g_printerr ("Unable to set the pipeline to the playing state.\n");
     return false;
   }
+  data->playing = 1;
 
  #if 0
    // Create a GLib Main Loop and set it to run 
@@ -188,11 +189,13 @@ void gstPlayer_playPause(void * gstData)
     {
         g_print("---gstPlayer_playPause set PAUSED\n");
         ret = gst_element_set_state (data->playbin, GST_STATE_PAUSED);
+        data->playing = 0;
     }
     else
     {
         g_print("---gstPlayer_playPause set PLAYING\n");
         ret = gst_element_set_state (data->playbin, GST_STATE_PLAYING);
+        data->playing = 1;
     }
     
     if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -213,7 +216,7 @@ bool gstPlayer_isplay(void * gstData)
 
 bool gstPlayer_setwindow(void * gstData, int x, int y, int width, int height)
 {
-   char rect[20];
+   char rect[64];
 
    if(gstData==NULL)
    {

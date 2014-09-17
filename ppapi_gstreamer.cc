@@ -79,6 +79,7 @@ class PPAPIGstreamerInstance : public pp::Instance,
   bool StartPlay();
 
   pp::Size plugin_size_;
+  pp::Rect windowrect;
   pp::CompletionCallbackFactory<PPAPIGstreamerInstance> callback_factory_;
 
   // Unowned pointers.
@@ -119,7 +120,12 @@ bool PPAPIGstreamerInstance::StartPlay()
     if(src_ !="")
     {
         gstData_ = gstPlayer_create();     
-        return gstPlayer_play(gstData_,src_.c_str());
+        gstPlayer_play(gstData_,src_.c_str());
+        if( windowrect.width() != 0 && windowrect.height() != 0 )
+        {
+          gstPlayer_setwindow(gstData_, windowrect.x(), windowrect.y(), windowrect.width(), windowrect.height());
+        }
+        return true;
     }    
     return false;
 }
@@ -141,6 +147,7 @@ void PPAPIGstreamerInstance::DidChangeView(
           position.x(), position.y(), position.width(),position.height());
   // set player video rect
   gstPlayer_setwindow(gstData_, position.x(), position.y(), position.width(), position.height());
+  windowrect = position;
   // Initialize graphics.
   InitGL(0);
 }
